@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>협업 업무 관리 시스템</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css">
+</head>
+<body>
+    <!-- 로그인 화면 -->
+    <div id="loginScreen" class="screen active">
+        <div class="login-container">
+            <div class="login-box">
+                <i class="fas fa-tasks login-icon"></i>
+                <h1>협업 업무 관리</h1>
+                <p class="subtitle">같은 네트워크의 팀원들과 업무를 공유하세요</p>
+                <div id="loginUserInfo" style="display: none; text-align: center; margin-bottom: 16px; padding: 12px; background: var(--bg-color); border-radius: 8px;">
+                    <i class="fas fa-user-circle" style="font-size: 24px; color: var(--primary-color); margin-bottom: 8px;"></i>
+                    <p style="font-weight: 600; color: var(--text-primary); margin-bottom: 4px;" id="loginUserName"></p>
+                    <p style="font-size: 13px; color: var(--text-secondary);">로그인 중</p>
+                </div>
+                <div class="login-form">
+                    <input type="text" id="usernameInput" placeholder="사용자 이름을 입력하세요" maxlength="20">
+                    <button id="loginBtn" class="primary-btn">
+                        <i class="fas fa-sign-in-alt"></i> <span id="loginBtnText">로그인</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 메인 업무 관리 화면 -->
+    <div id="mainScreen" class="screen">
+        <!-- 헤더 -->
+        <header class="main-header">
+            <div class="header-content">
+                <div class="header-left">
+                    <i class="fas fa-tasks"></i>
+                    <h1>업무 관리</h1>
+                </div>
+                <div class="header-right">
+                    <span class="user-name" id="currentUserName"></span>
+                    <button id="logoutBtn" class="secondary-btn">
+                        <i class="fas fa-sign-out-alt"></i> 로그아웃
+                    </button>
+                </div>
+            </div>
+        </header>
+
+        <!-- 메인 컨텐츠 -->
+        <main class="main-content">
+            <div class="content-wrapper">
+                <!-- 날짜 선택 영역 -->
+                <div class="date-selector">
+                    <button id="prevDateBtn" class="date-nav-btn">
+                        <i class="fas fa-chevron-left"></i>
+                    </button>
+                    <div class="date-display">
+                        <i class="fas fa-calendar-day"></i>
+                        <span id="currentDate"></span>
+                    </div>
+                    <button id="nextDateBtn" class="date-nav-btn">
+                        <i class="fas fa-chevron-right"></i>
+                    </button>
+                    <button id="todayBtn" class="today-btn">오늘</button>
+                </div>
+
+                <!-- 업무 추가 영역 -->
+                <div class="task-input-section">
+                    <div class="input-group">
+                        <input type="text" id="newTaskInput" placeholder="새로운 업무를 입력하세요..." maxlength="200">
+                        <button id="addTaskBtn" class="add-btn">
+                            <i class="fas fa-plus"></i> 추가
+                        </button>
+                    </div>
+                </div>
+
+                <!-- 내 업무 섹션 -->
+                <section class="task-section">
+                    <div class="section-header">
+                        <h2><i class="fas fa-user"></i> 내 업무 목록</h2>
+                        <span class="task-count" id="myTaskCount">0개</span>
+                    </div>
+                    <div class="tasks-grid">
+                        <!-- 예정된 업무 -->
+                        <div class="task-column">
+                            <h3 class="column-title">
+                                <i class="fas fa-clock"></i> 예정된 업무
+                            </h3>
+                            <div id="myPendingTasks" class="task-list">
+                                <!-- 동적으로 추가됨 -->
+                            </div>
+                        </div>
+
+                        <!-- 완료된 업무 -->
+                        <div class="task-column">
+                            <h3 class="column-title">
+                                <i class="fas fa-check-circle"></i> 완료된 업무
+                            </h3>
+                            <div id="myCompletedTasks" class="task-list">
+                                <!-- 동적으로 추가됨 -->
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- 팀 공유 업무 섹션 -->
+                <section class="task-section">
+                    <div class="section-header">
+                        <h2><i class="fas fa-users"></i> 팀 공유 업무</h2>
+                        <span class="task-count" id="sharedTaskCount">0개</span>
+                    </div>
+                    <div id="teamSharedTasks" class="team-tasks-list">
+                        <!-- 동적으로 추가됨 -->
+                    </div>
+                </section>
+
+                <!-- 팀원별 완료 업무 섹션 -->
+                <section class="task-section">
+                    <div class="section-header">
+                        <h2><i class="fas fa-users-cog"></i> 팀원별 완료 업무 (주간 조회)</h2>
+                        <div class="week-selector">
+                            <button id="prevWeekBtn" class="week-nav-btn">
+                                <i class="fas fa-chevron-left"></i> 이전 주
+                            </button>
+                            <span id="weekRange" class="week-range"></span>
+                            <button id="nextWeekBtn" class="week-nav-btn">
+                                다음 주 <i class="fas fa-chevron-right"></i>
+                            </button>
+                            <button id="thisWeekBtn" class="this-week-btn">이번 주</button>
+                        </div>
+                    </div>
+                    <div id="teamCompletedTasks" class="team-tasks-list">
+                        <!-- 동적으로 추가됨 -->
+                    </div>
+                </section>
+
+                <!-- 요청사항 섹션 -->
+                <section class="task-section">
+                    <div class="section-header">
+                        <h2><i class="fas fa-paper-plane"></i> 요청사항</h2>
+                        <button id="newRequestBtn" class="primary-btn">
+                            <i class="fas fa-plus"></i> 새 요청
+                        </button>
+                    </div>
+                    <div class="requests-container">
+                        <!-- 받은 요청 -->
+                        <div class="requests-column">
+                            <h3 class="column-title">
+                                <i class="fas fa-inbox"></i> 받은 요청
+                                <span class="badge" id="receivedRequestBadge">0</span>
+                            </h3>
+                            <div id="receivedRequests" class="requests-list">
+                                <!-- 동적으로 추가됨 -->
+                            </div>
+                        </div>
+
+                        <!-- 보낸 요청 -->
+                        <div class="requests-column">
+                            <h3 class="column-title">
+                                <i class="fas fa-paper-plane"></i> 보낸 요청
+                                <span class="badge" id="sentRequestBadge">0</span>
+                            </h3>
+                            <div id="sentRequests" class="requests-list">
+                                <!-- 동적으로 추가됨 -->
+                            </div>
+                        </div>
+                    </div>
+                </section>
+            </div>
+        </main>
+    </div>
+
+    <!-- 요청사항 작성 모달 -->
+    <div id="requestModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2><i class="fas fa-paper-plane"></i> 새 요청 작성</h2>
+                <button class="close-modal" id="closeRequestModal">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label for="requestToUser">받는 사람</label>
+                    <select id="requestToUser" class="form-control">
+                        <option value="">선택하세요</option>
+                        <!-- 동적으로 추가됨 -->
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="requestTitle">제목</label>
+                    <input type="text" id="requestTitle" class="form-control" placeholder="요청 제목을 입력하세요" maxlength="100">
+                </div>
+                <div class="form-group">
+                    <label for="requestMessage">요청 내용</label>
+                    <textarea id="requestMessage" class="form-control" rows="5" placeholder="요청 내용을 입력하세요" maxlength="500"></textarea>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button id="cancelRequestBtn" class="secondary-btn">취소</button>
+                <button id="sendRequestBtn" class="primary-btn">
+                    <i class="fas fa-paper-plane"></i> 전송
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 요청사항 상세 모달 -->
+    <div id="requestDetailModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2><i class="fas fa-file-alt"></i> 요청 상세</h2>
+                <button class="close-modal" id="closeDetailModal">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="modal-body" id="requestDetailContent">
+                <!-- 동적으로 추가됨 -->
+            </div>
+            <div class="modal-footer" id="requestDetailFooter">
+                <!-- 동적으로 추가됨 -->
+            </div>
+        </div>
+    </div>
+
+    <!-- 로딩 스피너 -->
+    <div id="loadingSpinner" class="loading-spinner">
+        <div class="spinner"></div>
+    </div>
+
+    <script src="js/app.js"></script>
+</body>
+</html>

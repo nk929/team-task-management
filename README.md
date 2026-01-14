@@ -1,5 +1,14 @@
 # 협업 업무 관리 시스템 (Team Task Management System)
 
+![GitHub last commit](https://img.shields.io/github/last-commit/YOUR_USERNAME/team-task-management)
+![GitHub repo size](https://img.shields.io/github/repo-size/YOUR_USERNAME/team-task-management)
+![GitHub language count](https://img.shields.io/github/languages/count/YOUR_USERNAME/team-task-management)
+![GitHub top language](https://img.shields.io/github/languages/top/YOUR_USERNAME/team-task-management)
+
+실시간 협업 업무 관리 웹 애플리케이션
+
+# 협업 업무 관리 시스템 (Team Task Management System)
+
 같은 네트워크상의 사용자들이 작업 내용을 공유하고 업무 진행 목록을 실시간으로 기록·관리하는 웹 애플리케이션입니다.
 
 ## 🎯 프로젝트 목표

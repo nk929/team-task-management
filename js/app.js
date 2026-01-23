@@ -943,21 +943,18 @@ async function sendRequest() {
 // 요청 상세 보기
 async function showRequestDetail(requestId) {
     const request = allRequests.find(r => r.id === requestId);
-    if (!request) return;
-    
-    // 받은 요청이고 읽지 않은 경우 읽음 처리
-    if (request.to_user_id === currentUser.id && !request.is_read) {
+        if (request.to_user_id === currentUser.id && !request.is_read) {
         try {
-            const response = await fetch(`tables/requests/${requestId}`, {
+            const result = await supabaseFetch(`requests?id=eq.${requestId}`, {
                 method: 'PATCH',
-                headers: {'Content-Type': 'application/json'},
                 body: JSON.stringify({
                     is_read: true,
-                    read_at: Date.now()
+                    read_at: new Date().toISOString()
                 })
             });
             
-            const updatedRequest = await response.json();
+            const updatedRequest = result[0];
+
             const index = allRequests.findIndex(r => r.id === requestId);
             if (index !== -1) {
                 allRequests[index] = updatedRequest;

@@ -1047,7 +1047,7 @@ async function showRequestDetail(requestId) {
 }
 
 // 요청 응답
-async function respondToRequest(requestId, status) {
+    async function respondToRequest(requestId, status) {
     const message = prompt(status === 'accepted' ? 
         '수락 메시지를 입력하세요 (선택사항):' : 
         '거절 사유를 입력하세요 (선택사항):');
@@ -1059,16 +1059,16 @@ async function respondToRequest(requestId, status) {
         const updateData = {
             status: status,
             response_message: message || '',
-            responded_at: Date.now()
+            responded_at: new Date().toISOString()
         };
         
-        const response = await fetch(`tables/requests/${requestId}`, {
+        const result = await supabaseFetch(`requests?id=eq.${requestId}`, {
             method: 'PATCH',
-            headers: {'Content-Type': 'application/json'},
             body: JSON.stringify(updateData)
         });
         
-        const updatedRequest = await response.json();
+        const updatedRequest = result[0];
+
         const index = allRequests.findIndex(r => r.id === requestId);
         if (index !== -1) {
             allRequests[index] = updatedRequest;

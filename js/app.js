@@ -255,23 +255,17 @@ async function loadAllData() {
     try {
         // 모든 사용자 로드
         console.log('사용자 목록 로드 중...');
-        const usersResponse = await fetch('tables/users?limit=1000');
-        const usersResult = await usersResponse.json();
-        allUsers = usersResult.data || [];
+        allUsers = await supabaseFetch('users?select=*&limit=1000');
         console.log('사용자 수:', allUsers.length);
 
         // 모든 업무 로드
         console.log('업무 목록 로드 중...');
-        const tasksResponse = await fetch('tables/tasks?limit=1000');
-        const tasksResult = await tasksResponse.json();
-        allTasks = tasksResult.data || [];
+        allTasks = await supabaseFetch('tasks?select=*&limit=1000');
         console.log('업무 수:', allTasks.length);
 
         // 모든 요청사항 로드
         console.log('요청사항 목록 로드 중...');
-        const requestsResponse = await fetch('tables/requests?limit=1000');
-        const requestsResult = await requestsResponse.json();
-        allRequests = requestsResult.data || [];
+        allRequests = await supabaseFetch('requests?select=*&limit=1000');
         console.log('요청사항 수:', allRequests.length);
 
         renderAllTasks();
@@ -284,6 +278,7 @@ async function loadAllData() {
         hideLoading();
     }
 }
+
 
 // 날짜 이동
 function changeDate(days) {

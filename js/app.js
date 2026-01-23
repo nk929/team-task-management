@@ -917,16 +917,15 @@ async function sendRequest() {
             message: message,
             status: 'pending',
             is_read: false,
-            created_at: Date.now()
+            created_at: new Date().toISOString()
         };
         
-        const response = await fetch('tables/requests', {
+        const result = await supabaseFetch('requests', {
             method: 'POST',
-            headers: {'Content-Type': 'application/json'},
             body: JSON.stringify(requestData)
         });
         
-        const newRequest = await response.json();
+        const newRequest = result[0];
         allRequests.push(newRequest);
         
         closeRequestModal();

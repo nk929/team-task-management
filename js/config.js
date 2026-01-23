@@ -1,6 +1,7 @@
 // Supabase 설정
 const SUPABASE_URL = 'https://pfatyrwaaproodukkwtp.supabase.co';
-const SUPABASE_KEY = 'sb_publishable_AhyjgbSGfaozq3UPbIQTIw_1BVERfq4';
+const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBmYXR5cndhYXByb29kdWtrd3RwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njg5NzI4MDcsImV4cCI6MjA4NDU0ODgwN30.WNdMyiej0JOzKCIsPdiXlUJ1LgYGHolZOHhBwMIaE-Y';
+
 
 // API 헬퍼 함수
 async function supabaseFetch(endpoint, options = {}) {

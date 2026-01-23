@@ -915,68 +915,112 @@ document.addEventListener('DOMContentLoaded', () => {
     console.log('이벤트 리스너 등록 중...');
     
     // 로그인/로그아웃 버튼
-    document.getElementById('loginBtn').addEventListener('click', () => {
-        if (currentUser) {
-            // 로그아웃
-            logout();
-        } else {
-            // 로그인
-            const username = document.getElementById('usernameInput').value;
-            login(username);
-        }
-    });
-
-    // 로그인 입력 엔터키
-    document.getElementById('usernameInput').addEventListener('keypress', (e) => {
-        if (e.key === 'Enter') {
+    const loginBtn = document.getElementById('loginBtn');
+    if (loginBtn) {
+        loginBtn.addEventListener('click', () => {
             if (currentUser) {
                 logout();
             } else {
                 const username = document.getElementById('usernameInput').value;
                 login(username);
             }
-        }
-    });
+        });
+    }
+
+    // 로그인 입력 엔터키
+    const usernameInput = document.getElementById('usernameInput');
+    if (usernameInput) {
+        usernameInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                if (currentUser) {
+                    logout();
+                } else {
+                    const username = document.getElementById('usernameInput').value;
+                    login(username);
+                }
+            }
+        });
+    }
 
     // 로그아웃 버튼 (헤더)
-    document.getElementById('logoutBtn').addEventListener('click', logout);
+    const logoutBtn = document.getElementById('logoutBtn');
+    if (logoutBtn) {
+        logoutBtn.addEventListener('click', logout);
+    }
 
     // 날짜 네비게이션
-    document.getElementById('prevDay').addEventListener('click', () => changeDate(-1));
-    document.getElementById('nextDay').addEventListener('click', () => changeDate(1));
-    document.getElementById('todayBtn').addEventListener('click', goToToday);
+    const prevDateBtn = document.getElementById('prevDateBtn');
+    const nextDateBtn = document.getElementById('nextDateBtn');
+    const todayBtn = document.getElementById('todayBtn');
+    
+    if (prevDateBtn) prevDateBtn.addEventListener('click', () => changeDate(-1));
+    if (nextDateBtn) nextDateBtn.addEventListener('click', () => changeDate(1));
+    if (todayBtn) todayBtn.addEventListener('click', goToToday);
 
     // 주간 네비게이션
-    document.getElementById('prevWeek').addEventListener('click', () => changeWeek(-1));
-    document.getElementById('nextWeek').addEventListener('click', () => changeWeek(1));
+    const prevWeek = document.getElementById('prevWeek');
+    const nextWeek = document.getElementById('nextWeek');
+    
+    if (prevWeek) prevWeek.addEventListener('click', () => changeWeek(-1));
+    if (nextWeek) nextWeek.addEventListener('click', () => changeWeek(1));
 
     // 업무 추가
-    document.getElementById('addTaskBtn').addEventListener('click', addTask);
-    document.getElementById('newTaskInput').addEventListener('keypress', (e) => {
-        if (e.key === 'Enter') {
-            addTask();
-        }
-    });
+    const addTaskBtn = document.getElementById('addTaskBtn');
+    const newTaskInput = document.getElementById('newTaskInput');
+    
+    if (addTaskBtn) {
+        addTaskBtn.addEventListener('click', addTask);
+    }
+    
+    if (newTaskInput) {
+        newTaskInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                addTask();
+            }
+        });
+    }
 
     // 새 요청 버튼
-    document.getElementById('newRequestBtn').addEventListener('click', openNewRequestModal);
+    const newRequestBtn = document.getElementById('newRequestBtn');
+    if (newRequestBtn) {
+        newRequestBtn.addEventListener('click', openNewRequestModal);
+        console.log('새 요청 버튼 이벤트 리스너 등록 완료');
+    } else {
+        console.warn('새 요청 버튼을 찾을 수 없습니다');
+    }
     
     // 요청 모달 버튼들
-    document.getElementById('sendRequestBtn').addEventListener('click', sendRequest);
-    document.getElementById('cancelRequestBtn').addEventListener('click', closeRequestModal);
+    const sendRequestBtn = document.getElementById('sendRequestBtn');
+    const cancelRequestBtn = document.getElementById('cancelRequestBtn');
+    
+    if (sendRequestBtn) {
+        sendRequestBtn.addEventListener('click', sendRequest);
+    }
+    
+    if (cancelRequestBtn) {
+        cancelRequestBtn.addEventListener('click', closeRequestModal);
+    }
     
     // 모달 배경 클릭으로 닫기
-    document.getElementById('requestModal').addEventListener('click', (e) => {
-        if (e.target.id === 'requestModal') {
-            closeRequestModal();
-        }
-    });
+    const requestModal = document.getElementById('requestModal');
+    if (requestModal) {
+        requestModal.addEventListener('click', (e) => {
+            if (e.target.id === 'requestModal') {
+                closeRequestModal();
+            }
+        });
+    }
     
-    document.getElementById('requestDetailModal').addEventListener('click', (e) => {
-        if (e.target.id === 'requestDetailModal') {
-            closeDetailModal();
-        }
-    });
+    const requestDetailModal = document.getElementById('requestDetailModal');
+    if (requestDetailModal) {
+        requestDetailModal.addEventListener('click', (e) => {
+            if (e.target.id === 'requestDetailModal') {
+                closeDetailModal();
+            }
+        });
+    }
+
+    console.log('이벤트 리스너 등록 완료');
 
     // 자동 로그인 체크
     const savedUser = localStorage.getItem('currentUser');

@@ -8,8 +8,13 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css">
     <script src="js/config.js"></script>
 </head>
-
 <body>
+    <!-- 로딩 스피너 -->
+    <div id="loadingSpinner" class="loading-spinner hidden">
+        <div class="spinner"></div>
+        <p>처리 중...</p>
+    </div>
+
     <!-- 로그인 화면 -->
     <div id="loginScreen" class="screen active">
         <div class="login-container">
@@ -17,7 +22,7 @@
                 <i class="fas fa-tasks login-icon"></i>
                 <h1>협업 업무 관리</h1>
                 <p class="subtitle">같은 네트워크의 팀원들과 업무를 공유하세요</p>
-                <div id="loginUserInfo" style="display: none; text-align: center; margin-bottom: 16px; padding: 12px; background: var(--bg-color); border-radius: 8px;">
+                <div id="loginUserInfo" class="hidden" style="text-align: center; margin-bottom: 16px; padding: 12px; background: var(--bg-color); border-radius: 8px;">
                     <i class="fas fa-user-circle" style="font-size: 24px; color: var(--primary-color); margin-bottom: 8px;"></i>
                     <p style="font-weight: 600; color: var(--text-primary); margin-bottom: 4px;" id="loginUserName"></p>
                     <p style="font-size: 13px; color: var(--text-secondary);">로그인 중</p>
@@ -111,29 +116,32 @@
                 <section class="task-section">
                     <div class="section-header">
                         <h2><i class="fas fa-users"></i> 팀 공유 업무</h2>
-                        <span class="task-count" id="sharedTaskCount">0개</span>
+                        <span class="task-count" id="teamSharedCount">0개</span>
                     </div>
-                    <div id="teamSharedTasks" class="team-tasks-list">
+                    <div id="teamSharedTasks" class="task-list">
                         <!-- 동적으로 추가됨 -->
                     </div>
                 </section>
 
-                <!-- 팀원별 완료 업무 섹션 -->
+                <!-- 팀원별 완료 업무 (주간 조회) -->
                 <section class="task-section">
                     <div class="section-header">
-                        <h2><i class="fas fa-users-cog"></i> 팀원별 완료 업무 (주간 조회)</h2>
-                        <div class="week-selector">
-                            <button id="prevWeekBtn" class="week-nav-btn">
-                                <i class="fas fa-chevron-left"></i> 이전 주
-                            </button>
-                            <span id="weekRange" class="week-range"></span>
-                            <button id="nextWeekBtn" class="week-nav-btn">
-                                다음 주 <i class="fas fa-chevron-right"></i>
-                            </button>
-                            <button id="thisWeekBtn" class="this-week-btn">이번 주</button>
-                        </div>
+                        <h2><i class="fas fa-calendar-week"></i> 팀원별 완료 업무 (주간 조회)</h2>
+                        <span class="task-count" id="teamCompletedCount">0개</span>
                     </div>
-                    <div id="teamCompletedTasks" class="team-tasks-list">
+                    <div class="week-selector">
+                        <button id="prevWeek" class="date-nav-btn">
+                            <i class="fas fa-chevron-left"></i>
+                        </button>
+                        <div class="week-display">
+                            <i class="fas fa-calendar-alt"></i>
+                            <span id="currentWeek"></span>
+                        </div>
+                        <button id="nextWeek" class="date-nav-btn">
+                            <i class="fas fa-chevron-right"></i>
+                        </button>
+                    </div>
+                    <div id="teamCompletedTasks" class="task-list">
                         <!-- 동적으로 추가됨 -->
                     </div>
                 </section>
@@ -141,32 +149,31 @@
                 <!-- 요청사항 섹션 -->
                 <section class="task-section">
                     <div class="section-header">
-                        <h2><i class="fas fa-paper-plane"></i> 요청사항</h2>
+                        <h2><i class="fas fa-envelope"></i> 요청사항</h2>
                         <button id="newRequestBtn" class="primary-btn">
                             <i class="fas fa-plus"></i> 새 요청
                         </button>
                     </div>
-                    <div class="requests-container">
-                        <!-- 받은 요청 -->
-                        <div class="requests-column">
-                            <h3 class="column-title">
-                                <i class="fas fa-inbox"></i> 받은 요청
-                                <span class="badge" id="receivedRequestBadge">0</span>
-                            </h3>
-                            <div id="receivedRequests" class="requests-list">
-                                <!-- 동적으로 추가됨 -->
-                            </div>
+                    
+                    <!-- 받은 요청 -->
+                    <div class="request-subsection">
+                        <h3 class="subsection-title">
+                            <i class="fas fa-inbox"></i> 받은 요청
+                            <span class="task-count" id="receivedCount">0개</span>
+                        </h3>
+                        <div id="receivedRequests" class="request-list">
+                            <!-- 동적으로 추가됨 -->
                         </div>
-
-                        <!-- 보낸 요청 -->
-                        <div class="requests-column">
-                            <h3 class="column-title">
-                                <i class="fas fa-paper-plane"></i> 보낸 요청
-                                <span class="badge" id="sentRequestBadge">0</span>
-                            </h3>
-                            <div id="sentRequests" class="requests-list">
-                                <!-- 동적으로 추가됨 -->
-                            </div>
+                    </div>
+                    
+                    <!-- 보낸 요청 -->
+                    <div class="request-subsection">
+                        <h3 class="subsection-title">
+                            <i class="fas fa-paper-plane"></i> 보낸 요청
+                            <span class="task-count" id="sentCount">0개</span>
+                        </h3>
+                        <div id="sentRequests" class="request-list">
+                            <!-- 동적으로 추가됨 -->
                         </div>
                     </div>
                 </section>
@@ -174,21 +181,17 @@
         </main>
     </div>
 
-    <!-- 요청사항 작성 모달 -->
+    <!-- 새 요청 모달 -->
     <div id="requestModal" class="modal">
         <div class="modal-content">
             <div class="modal-header">
-                <h2><i class="fas fa-paper-plane"></i> 새 요청 작성</h2>
-                <button class="close-modal" id="closeRequestModal">
-                    <i class="fas fa-times"></i>
-                </button>
+                <h2><i class="fas fa-envelope"></i> 새 요청 작성</h2>
             </div>
             <div class="modal-body">
                 <div class="form-group">
-                    <label for="requestToUser">받는 사람</label>
-                    <select id="requestToUser" class="form-control">
-                        <option value="">선택하세요</option>
-                        <!-- 동적으로 추가됨 -->
+                    <label for="toUserSelect">받을 사람</label>
+                    <select id="toUserSelect" class="form-control">
+                        <option value="">받을 사람 선택</option>
                     </select>
                 </div>
                 <div class="form-group">
@@ -196,8 +199,8 @@
                     <input type="text" id="requestTitle" class="form-control" placeholder="요청 제목을 입력하세요" maxlength="100">
                 </div>
                 <div class="form-group">
-                    <label for="requestMessage">요청 내용</label>
-                    <textarea id="requestMessage" class="form-control" rows="5" placeholder="요청 내용을 입력하세요" maxlength="500"></textarea>
+                    <label for="requestMessage">내용</label>
+                    <textarea id="requestMessage" class="form-control" rows="4" placeholder="요청 내용을 입력하세요" maxlength="500"></textarea>
                 </div>
             </div>
             <div class="modal-footer">
@@ -209,27 +212,41 @@
         </div>
     </div>
 
-    <!-- 요청사항 상세 모달 -->
+    <!-- 요청 상세 모달 -->
     <div id="requestDetailModal" class="modal">
         <div class="modal-content">
             <div class="modal-header">
-                <h2><i class="fas fa-file-alt"></i> 요청 상세</h2>
-                <button class="close-modal" id="closeDetailModal">
-                    <i class="fas fa-times"></i>
-                </button>
+                <h2><i class="fas fa-envelope-open"></i> 요청 상세</h2>
             </div>
-            <div class="modal-body" id="requestDetailContent">
-                <!-- 동적으로 추가됨 -->
+            <div class="modal-body">
+                <div class="detail-row">
+                    <strong>보낸 사람:</strong>
+                    <span id="detailFromUser"></span>
+                </div>
+                <div class="detail-row">
+                    <strong>받는 사람:</strong>
+                    <span id="detailToUser"></span>
+                </div>
+                <div class="detail-row">
+                    <strong>제목:</strong>
+                    <span id="detailTitle"></span>
+                </div>
+                <div class="detail-row">
+                    <strong>내용:</strong>
+                    <p id="detailMessage"></p>
+                </div>
+                <div class="detail-row">
+                    <strong>상태:</strong>
+                    <span id="detailStatus"></span>
+                </div>
+                <div class="detail-row" id="detailResponse">
+                    <!-- 응답이 있을 경우 동적으로 추가 -->
+                </div>
             </div>
-            <div class="modal-footer" id="requestDetailFooter">
+            <div class="modal-footer" id="detailActions">
                 <!-- 동적으로 추가됨 -->
             </div>
         </div>
-    </div>
-
-    <!-- 로딩 스피너 -->
-    <div id="loadingSpinner" class="loading-spinner">
-        <div class="spinner"></div>
     </div>
 
     <script src="js/app.js"></script>

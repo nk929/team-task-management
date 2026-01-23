@@ -1,10 +1,10 @@
 // 전역 변수
 let currentUser = null;
 let currentDate = new Date();
-let currentWeekStart = null; // 주간 조회 시작일
+let currentWeekStart = null;
 let allTasks = [];
 let allUsers = [];
-let allRequests = []; // 모든 요청사항
+let allRequests = [];
 
 // 날짜 포맷 함수
 function formatDate(date) {
@@ -27,7 +27,7 @@ function formatDateKorean(date) {
 function getWeekStart(date) {
     const d = new Date(date);
     const day = d.getDay();
-    const diff = d.getDate() - day + (day === 0 ? -6 : 1); // 월요일로 조정
+    const diff = d.getDate() - day + (day === 0 ? -6 : 1);
     return new Date(d.setDate(diff));
 }
 
@@ -63,7 +63,7 @@ function updatePageTitle() {
     document.title = `협업 업무 관리 - ${formattedDate}`;
 }
 
-// 로딩 스피너 표시/숨김
+// 로딩 스피너
 function showLoading() {
     document.getElementById('loadingSpinner').classList.add('active');
 }
@@ -80,7 +80,7 @@ function showScreen(screenId) {
     document.getElementById(screenId).classList.add('active');
 }
 
-// 로그인 처리
+// 로그인
 async function login(username) {
     if (!username || username.trim() === '') {
         alert('사용자 이름을 입력해주세요.');
@@ -90,27 +90,22 @@ async function login(username) {
     showLoading();
 
     try {
-        // 모든 사용자 조회 후 정확히 일치하는 사용자 찾기
         const users = await supabaseFetch('users?select=*&limit=1000');
-
+        
         let user;
         const existingUser = users.find(u => u.username === username.trim());
-
         
         if (existingUser) {
-            // 기존 사용자 - 온라인 상태 업데이트
-        const now = new Date().toISOString();
-        const result = await supabaseFetch(`users?id=eq.${existingUser.id}`, {
-            method: 'PATCH',
-            body: JSON.stringify({
-                is_online: true,
-                last_active_at: now
-            })
-        });
-        user = result[0];
-
+            const now = new Date().toISOString();
+            const result = await supabaseFetch(`users?id=eq.${existingUser.id}`, {
+                method: 'PATCH',
+                body: JSON.stringify({
+                    is_online: true,
+                    last_active_at: now
+                })
+            });
+            user = result[0];
         } else {
-            // 새 사용자 생성
             const now = new Date().toISOString();
             const result = await supabaseFetch('users', {
                 method: 'POST',
@@ -119,9 +114,9 @@ async function login(username) {
                     is_online: true,
                     last_active_at: now,
                     created_at: now
-            })
-        });
-        user = result[0];
+                })
+            });
+            user = result[0];
         }
 
         currentUser = user;
@@ -130,19 +125,16 @@ async function login(username) {
         document.getElementById('currentUserName').textContent = user.username;
         showScreen('mainScreen');
         
-        // 초기 데이터 로드
         await loadAllData();
         updateDateDisplay();
         updatePageTitle();
         
-        // 주간 조회 초기화 (이번 주로 설정)
         currentWeekStart = getWeekStart(new Date());
         updateWeekDisplay();
         
         await checkAndMigrateTasks();
         await deleteOldCompletedTasks();
         
-        // 로그인 버튼 텍스트 변경
         updateLoginButton(true);
 
     } catch (error) {
@@ -155,7 +147,6 @@ async function login(username) {
 
 // 로그아웃
 function logout() {
-    // 오프라인 상태로 업데이트
     if (currentUser) {
         updateUserOnlineStatus(false);
     }
@@ -165,7 +156,6 @@ function logout() {
     showScreen('loginScreen');
     document.getElementById('usernameInput').value = '';
     
-    // 로그인 버튼 텍스트 변경
     updateLoginButton(false);
 }
 
@@ -184,7 +174,6 @@ function updateLoginButton(isLoggedIn) {
         loginBtn.classList.remove('primary-btn');
         loginBtn.classList.add('secondary-btn');
         
-        // 입력창 숨기고 사용자 정보 표시
         usernameInput.style.display = 'none';
         loginUserInfo.style.display = 'block';
         if (currentUser) {
@@ -196,23 +185,21 @@ function updateLoginButton(isLoggedIn) {
         loginBtn.classList.remove('secondary-btn');
         loginBtn.classList.add('primary-btn');
         
-        // 사용자 정보 숨기고 입력창 표시
         usernameInput.style.display = 'block';
         loginUserInfo.style.display = 'none';
     }
 }
 
-// 사용자 온라인 상태 업데이트
+// 온라인 상태 업데이트
 async function updateUserOnlineStatus(isOnline) {
     if (!currentUser) return;
     
     try {
-        await fetch(`tables/users/${currentUser.id}`, {
+        await supabaseFetch(`users?id=eq.${currentUser.id}`, {
             method: 'PATCH',
-            headers: {'Content-Type': 'application/json'},
             body: JSON.stringify({
                 is_online: isOnline,
-                last_active_at: Date.now()
+                last_active_at: new Date().toISOString()
             })
         });
     } catch (error) {
@@ -220,17 +207,16 @@ async function updateUserOnlineStatus(isOnline) {
     }
 }
 
-// 하트비트 - 주기적으로 온라인 상태 갱신
+// 하트비트
 async function sendHeartbeat() {
     if (!currentUser) return;
     
     try {
-        await fetch(`tables/users/${currentUser.id}`, {
+        await supabaseFetch(`users?id=eq.${currentUser.id}`, {
             method: 'PATCH',
-            headers: {'Content-Type': 'application/json'},
             body: JSON.stringify({
                 is_online: true,
-                last_active_at: Date.now()
+                last_active_at: new Date().toISOString()
             })
         });
     } catch (error) {
@@ -238,13 +224,12 @@ async function sendHeartbeat() {
     }
 }
 
-// 사용자 온라인 여부 확인 (마지막 활동 시간 기준)
+// 온라인 여부 확인
 function isUserOnline(user) {
     if (!user.last_active_at) return false;
-    const now = Date.now();
-    const lastActive = user.last_active_at;
+    const now = new Date();
+    const lastActive = new Date(user.last_active_at);
     const timeDiff = now - lastActive;
-    // 2분 이내 활동이 있으면 온라인으로 간주
     return timeDiff < 120000;
 }
 
@@ -253,18 +238,12 @@ async function loadAllData() {
     console.log('데이터 로드 시작...');
     showLoading();
     try {
-        // 모든 사용자 로드
-        console.log('사용자 목록 로드 중...');
         allUsers = await supabaseFetch('users?select=*&limit=1000');
         console.log('사용자 수:', allUsers.length);
 
-        // 모든 업무 로드
-        console.log('업무 목록 로드 중...');
         allTasks = await supabaseFetch('tasks?select=*&limit=1000');
         console.log('업무 수:', allTasks.length);
 
-        // 모든 요청사항 로드
-        console.log('요청사항 목록 로드 중...');
         allRequests = await supabaseFetch('requests?select=*&limit=1000');
         console.log('요청사항 수:', allRequests.length);
 
@@ -278,7 +257,6 @@ async function loadAllData() {
         hideLoading();
     }
 }
-
 
 // 날짜 이동
 function changeDate(days) {
@@ -331,16 +309,15 @@ async function addTask(title) {
             task_date: formatDate(currentDate),
             is_shared: false,
             is_completed: false,
-            created_at: Date.now()
+            created_at: new Date().toISOString()
         };
 
-        const response = await fetch('tables/tasks', {
+        const result = await supabaseFetch('tasks', {
             method: 'POST',
-            headers: {'Content-Type': 'application/json'},
             body: JSON.stringify(taskData)
         });
 
-        const newTask = await response.json();
+        const newTask = result[0];
         allTasks.push(newTask);
 
         document.getElementById('newTaskInput').value = '';
@@ -363,16 +340,15 @@ async function toggleTaskComplete(taskId) {
 
         const updateData = {
             is_completed: !task.is_completed,
-            completed_at: !task.is_completed ? Date.now() : null
+            completed_at: !task.is_completed ? new Date().toISOString() : null
         };
 
-        const response = await fetch(`tables/tasks/${taskId}`, {
+        const result = await supabaseFetch(`tasks?id=eq.${taskId}`, {
             method: 'PATCH',
-            headers: {'Content-Type': 'application/json'},
             body: JSON.stringify(updateData)
         });
 
-        const updatedTask = await response.json();
+        const updatedTask = result[0];
         const index = allTasks.findIndex(t => t.id === taskId);
         if (index !== -1) {
             allTasks[index] = updatedTask;
@@ -399,13 +375,12 @@ async function toggleTaskShare(taskId) {
             is_shared: !task.is_shared
         };
 
-        const response = await fetch(`tables/tasks/${taskId}`, {
+        const result = await supabaseFetch(`tasks?id=eq.${taskId}`, {
             method: 'PATCH',
-            headers: {'Content-Type': 'application/json'},
             body: JSON.stringify(updateData)
         });
 
-        const updatedTask = await response.json();
+        const updatedTask = result[0];
         const index = allTasks.findIndex(t => t.id === taskId);
         if (index !== -1) {
             allTasks[index] = updatedTask;
@@ -429,7 +404,7 @@ async function deleteTask(taskId) {
 
     showLoading();
     try {
-        await fetch(`tables/tasks/${taskId}`, {
+        await supabaseFetch(`tasks?id=eq.${taskId}`, {
             method: 'DELETE'
         });
 
@@ -448,7 +423,6 @@ async function deleteTask(taskId) {
 function renderAllTasks() {
     const selectedDate = formatDate(currentDate);
     
-    // 내 업무 필터링
     const myTasks = allTasks.filter(t => 
         t.user_id === currentUser.id && t.task_date === selectedDate
     );
@@ -456,19 +430,16 @@ function renderAllTasks() {
     const myPending = myTasks.filter(t => !t.is_completed);
     const myCompleted = myTasks.filter(t => t.is_completed);
 
-    // 내 업무 렌더링
     renderMyTasks('myPendingTasks', myPending, true);
     renderMyTasks('myCompletedTasks', myCompleted, true);
     document.getElementById('myTaskCount').textContent = `${myTasks.length}개`;
 
-    // 팀 공유 업무 렌더링
     const sharedTasks = allTasks.filter(t => 
         t.is_shared && !t.is_completed && t.task_date === selectedDate
     );
     renderTeamSharedTasks(sharedTasks);
     document.getElementById('sharedTaskCount').textContent = `${sharedTasks.length}개`;
 
-    // 팀원별 완료 업무 렌더링
     renderTeamCompletedTasks();
 }
 
@@ -538,7 +509,6 @@ function renderTeamSharedTasks(sharedTasks) {
         return;
     }
 
-    // 사용자별로 그룹화
     const tasksByUser = {};
     sharedTasks.forEach(task => {
         if (!tasksByUser[task.user_id]) {
@@ -578,15 +548,13 @@ function renderTeamSharedTasks(sharedTasks) {
     }).join('');
 }
 
-// 팀원별 완료 업무 렌더링 (주간 단위)
+// 팀원별 완료 업무 렌더링
 function renderTeamCompletedTasks() {
     const container = document.getElementById('teamCompletedTasks');
     
-    // 주간 범위 계산
     const weekStart = formatDate(currentWeekStart);
     const weekEnd = formatDate(getWeekEnd(currentWeekStart));
     
-    // 다른 팀원들의 완료된 업무 (공유+완료, 주간 범위 내)
     const completedTasks = allTasks.filter(t => {
         const taskDate = t.task_date;
         return t.user_id !== currentUser.id && 
@@ -606,7 +574,6 @@ function renderTeamCompletedTasks() {
         return;
     }
 
-    // 사용자별로 그룹화
     const tasksByUser = {};
     completedTasks.forEach(task => {
         if (!tasksByUser[task.user_id]) {
@@ -620,7 +587,6 @@ function renderTeamCompletedTasks() {
         const userName = user ? user.username : '알 수 없음';
         const tasks = tasksByUser[userId];
         
-        // 날짜별로 그룹화
         const tasksByDate = {};
         tasks.forEach(task => {
             if (!tasksByDate[task.task_date]) {
@@ -671,14 +637,11 @@ function renderTeamCompletedTasks() {
     }).join('');
 }
 
-// 날짜가 지난 미완료 업무를 오늘로 이관
+// 자동 이관
 async function checkAndMigrateTasks() {
     const today = formatDate(new Date());
-    const yesterday = new Date();
-    yesterday.setDate(yesterday.getDate() - 1);
     
     try {
-        // 오늘 이전의 미완료 업무 찾기
         const oldTasks = allTasks.filter(t => 
             t.user_id === currentUser.id &&
             !t.is_completed && 
@@ -687,19 +650,17 @@ async function checkAndMigrateTasks() {
 
         if (oldTasks.length === 0) return;
 
-        // 각 업무를 오늘 날짜로 업데이트
         for (const task of oldTasks) {
             const updateData = {
                 task_date: today
             };
 
-            const response = await fetch(`tables/tasks/${task.id}`, {
+            const result = await supabaseFetch(`tasks?id=eq.${task.id}`, {
                 method: 'PATCH',
-                headers: {'Content-Type': 'application/json'},
                 body: JSON.stringify(updateData)
             });
 
-            const updatedTask = await response.json();
+            const updatedTask = result[0];
             const index = allTasks.findIndex(t => t.id === task.id);
             if (index !== -1) {
                 allTasks[index] = updatedTask;
@@ -713,15 +674,13 @@ async function checkAndMigrateTasks() {
     }
 }
 
-// 6개월 이상 완료된 업무 삭제
+// 오래된 완료 업무 삭제
 async function deleteOldCompletedTasks() {
     try {
-        // 6개월 전 날짜 계산
         const sixMonthsAgo = new Date();
         sixMonthsAgo.setMonth(sixMonthsAgo.getMonth() - 6);
         const cutoffDate = formatDate(sixMonthsAgo);
         
-        // 6개월 이전에 완료된 업무 찾기
         const oldCompletedTasks = allTasks.filter(t => 
             t.is_completed && 
             t.task_date < cutoffDate
@@ -734,20 +693,17 @@ async function deleteOldCompletedTasks() {
 
         console.log(`${oldCompletedTasks.length}개의 6개월 이상 완료된 업무를 삭제합니다...`);
 
-        // 순차적으로 삭제
         for (const task of oldCompletedTasks) {
             try {
-                await fetch(`tables/tasks/${task.id}`, {
+                await supabaseFetch(`tasks?id=eq.${task.id}`, {
                     method: 'DELETE'
                 });
                 
-                // 로컬 배열에서도 제거
                 const index = allTasks.findIndex(t => t.id === task.id);
                 if (index !== -1) {
                     allTasks.splice(index, 1);
                 }
                 
-                // 삭제 속도 조절 (서버 부하 방지)
                 await new Promise(resolve => setTimeout(resolve, 100));
             } catch (error) {
                 console.error(`업무 삭제 실패 (ID: ${task.id}):`, error);
@@ -773,17 +729,13 @@ function escapeHtml(text) {
     return text.replace(/[&<>"']/g, m => map[m]);
 }
 
-// ============ 요청사항 관련 함수 ============
-
 // 요청사항 렌더링
 function renderRequests() {
-    // 받은 요청
     const receivedRequests = allRequests.filter(r => r.to_user_id === currentUser.id);
     const unreadReceived = receivedRequests.filter(r => !r.is_read);
     renderRequestList('receivedRequests', receivedRequests);
     document.getElementById('receivedRequestBadge').textContent = unreadReceived.length;
     
-    // 보낸 요청
     const sentRequests = allRequests.filter(r => r.from_user_id === currentUser.id);
     const pendingSent = sentRequests.filter(r => r.status === 'pending');
     renderRequestList('sentRequests', sentRequests);
@@ -804,8 +756,7 @@ function renderRequestList(containerId, requests) {
         return;
     }
     
-    // 최신순 정렬
-    requests.sort((a, b) => b.created_at - a.created_at);
+    requests.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
     
     container.innerHTML = requests.map(request => {
         const fromUser = allUsers.find(u => u.id === request.from_user_id);
@@ -819,11 +770,9 @@ function renderRequestList(containerId, requests) {
             'rejected': '거절됨'
         }[request.status] || '알 수 없음';
         
-        // 온라인 상태 확인
         const targetUser = containerId === 'receivedRequests' ? fromUser : toUser;
         const isOnline = targetUser ? isUserOnline(targetUser) : false;
         
-        // 읽음 상태 (받은 요청만)
         const readIndicator = containerId === 'receivedRequests' && !request.is_read ? 
             '<span class="read-indicator unread"><i class="fas fa-circle"></i> 읽지 않음</span>' : '';
         
@@ -858,13 +807,11 @@ function renderRequestList(containerId, requests) {
     }).join('');
 }
 
-// 새 요청 모달 열기
+// 새 요청 모달
 function openNewRequestModal() {
-    // 사용자 목록 업데이트 (온라인 상태 포함)
     const userSelect = document.getElementById('requestToUser');
     const otherUsers = allUsers.filter(u => u.id !== currentUser.id);
     
-    // 온라인 사용자 먼저, 오프라인 사용자 나중에
     otherUsers.sort((a, b) => {
         const aOnline = isUserOnline(a);
         const bOnline = isUserOnline(b);
@@ -880,7 +827,6 @@ function openNewRequestModal() {
             return `<option value="${user.id}">${statusEmoji} ${escapeHtml(user.username)}</option>`;
         }).join('');
     
-    // 입력 필드 초기화
     document.getElementById('requestTitle').value = '';
     document.getElementById('requestMessage').value = '';
     
@@ -930,301 +876,4 @@ async function sendRequest() {
         
         closeRequestModal();
         renderRequests();
-        alert('요청이 전송되었습니다!');
-        
-    } catch (error) {
-        console.error('요청 전송 오류:', error);
-        alert('요청 전송 중 오류가 발생했습니다.');
-    } finally {
-        hideLoading();
-    }
-}
-
-// 요청 상세 보기
-async function showRequestDetail(requestId) {
-    const request = allRequests.find(r => r.id === requestId);
-        if (request.to_user_id === currentUser.id && !request.is_read) {
-        try {
-            const result = await supabaseFetch(`requests?id=eq.${requestId}`, {
-                method: 'PATCH',
-                body: JSON.stringify({
-                    is_read: true,
-                    read_at: new Date().toISOString()
-                })
-            });
-            
-            const updatedRequest = result[0];
-
-            const index = allRequests.findIndex(r => r.id === requestId);
-            if (index !== -1) {
-                allRequests[index] = updatedRequest;
-            }
-            
-            // 읽음 처리 후 목록 다시 렌더링
-            renderRequests();
-        } catch (error) {
-            console.error('읽음 처리 오류:', error);
-        }
-    }
-    
-    const fromUser = allUsers.find(u => u.id === request.from_user_id);
-    const toUser = allUsers.find(u => u.id === request.to_user_id);
-    const fromUserName = fromUser ? fromUser.username : '알 수 없음';
-    const toUserName = toUser ? toUser.username : '알 수 없음';
-    
-    // 온라인 상태
-    const fromUserOnline = fromUser ? isUserOnline(fromUser) : false;
-    const toUserOnline = toUser ? isUserOnline(toUser) : false;
-    
-    const statusText = {
-        'pending': '대기중',
-        'accepted': '수락됨',
-        'rejected': '거절됨'
-    }[request.status] || '알 수 없음';
-    
-    const detailContent = document.getElementById('requestDetailContent');
-    detailContent.innerHTML = `
-        <div class="request-detail-info">
-            <p>
-                <strong>보낸 사람:</strong> 
-                <span class="user-status">
-                    <span class="status-dot ${fromUserOnline ? 'online' : 'offline'}"></span>
-                    ${escapeHtml(fromUserName)}
-                    <span class="status-text ${fromUserOnline ? 'online' : 'offline'}">
-                        (${fromUserOnline ? '온라인' : '오프라인'})
-                    </span>
-                </span>
-            </p>
-            <p>
-                <strong>받는 사람:</strong> 
-                <span class="user-status">
-                    <span class="status-dot ${toUserOnline ? 'online' : 'offline'}"></span>
-                    ${escapeHtml(toUserName)}
-                    <span class="status-text ${toUserOnline ? 'online' : 'offline'}">
-                        (${toUserOnline ? '온라인' : '오프라인'})
-                    </span>
-                </span>
-            </p>
-            <p><strong>상태:</strong> <span class="request-status ${request.status}">${statusText}</span></p>
-            <p><strong>요청 시간:</strong> ${new Date(request.created_at).toLocaleString('ko-KR')}</p>
-            ${request.is_read && request.read_at ? `<p><strong>읽은 시간:</strong> ${new Date(request.read_at).toLocaleString('ko-KR')}</p>` : ''}
-            ${request.responded_at ? `<p><strong>응답 시간:</strong> ${new Date(request.responded_at).toLocaleString('ko-KR')}</p>` : ''}
-        </div>
-        
-        <h3 style="font-size: 18px; font-weight: 600; margin-bottom: 12px;">${escapeHtml(request.title)}</h3>
-        <p style="line-height: 1.6; color: var(--text-primary); margin-bottom: 16px;">${escapeHtml(request.message)}</p>
-        
-        ${request.response_message ? `
-            <div class="response-area">
-                <h4><i class="fas fa-reply"></i> 응답 내용</h4>
-                <p style="line-height: 1.6;">${escapeHtml(request.response_message)}</p>
-            </div>
-        ` : ''}
-    `;
-    
-    const detailFooter = document.getElementById('requestDetailFooter');
-    
-    // 받은 요청이고 대기중인 경우 응답 버튼 표시
-    if (request.to_user_id === currentUser.id && request.status === 'pending') {
-        detailFooter.innerHTML = `
-            <button class="secondary-btn" onclick="respondToRequest('${request.id}', 'rejected')">
-                <i class="fas fa-times"></i> 거절
-            </button>
-            <button class="primary-btn" onclick="respondToRequest('${request.id}', 'accepted')">
-                <i class="fas fa-check"></i> 수락
-            </button>
-        `;
-    } else {
-        detailFooter.innerHTML = `
-            <button class="secondary-btn" onclick="closeDetailModal()">닫기</button>
-        `;
-    }
-    
-    document.getElementById('requestDetailModal').classList.add('active');
-}
-
-// 요청 응답
-    async function respondToRequest(requestId, status) {
-    const message = prompt(status === 'accepted' ? 
-        '수락 메시지를 입력하세요 (선택사항):' : 
-        '거절 사유를 입력하세요 (선택사항):');
-    
-    if (message === null) return; // 취소
-    
-    showLoading();
-    try {
-        const updateData = {
-            status: status,
-            response_message: message || '',
-            responded_at: new Date().toISOString()
-        };
-        
-        const result = await supabaseFetch(`requests?id=eq.${requestId}`, {
-            method: 'PATCH',
-            body: JSON.stringify(updateData)
-        });
-        
-        const updatedRequest = result[0];
-
-        const index = allRequests.findIndex(r => r.id === requestId);
-        if (index !== -1) {
-            allRequests[index] = updatedRequest;
-        }
-        
-        closeDetailModal();
-        renderRequests();
-        alert(status === 'accepted' ? '요청을 수락했습니다!' : '요청을 거절했습니다.');
-        
-    } catch (error) {
-        console.error('요청 응답 오류:', error);
-        alert('응답 중 오류가 발생했습니다.');
-    } finally {
-        hideLoading();
-    }
-}
-
-// 모달 닫기
-function closeRequestModal() {
-    document.getElementById('requestModal').classList.remove('active');
-}
-
-function closeDetailModal() {
-    document.getElementById('requestDetailModal').classList.remove('active');
-}
-
-// 이벤트 리스너 설정
-document.addEventListener('DOMContentLoaded', () => {
-    console.log('페이지 로드 완료');
-    console.log('이벤트 리스너 등록 중...');
-    
-    // 로그인/로그아웃 버튼
-    document.getElementById('loginBtn').addEventListener('click', () => {
-        if (currentUser) {
-            // 로그아웃
-            logout();
-        } else {
-            // 로그인
-            const username = document.getElementById('usernameInput').value;
-            login(username);
-        }
-    });
-
-    // 로그인 입력 엔터키
-    document.getElementById('usernameInput').addEventListener('keypress', (e) => {
-        if (e.key === 'Enter') {
-            if (currentUser) {
-                logout();
-            } else {
-                const username = document.getElementById('usernameInput').value;
-                login(username);
-            }
-        }
-    });
-
-    // 로그아웃 버튼 (헤더)
-    document.getElementById('logoutBtn').addEventListener('click', logout);
-
-    // 날짜 네비게이션
-    document.getElementById('prevDateBtn').addEventListener('click', () => changeDate(-1));
-    document.getElementById('nextDateBtn').addEventListener('click', () => changeDate(1));
-    document.getElementById('todayBtn').addEventListener('click', goToToday);
-
-    // 주간 네비게이션
-    document.getElementById('prevWeekBtn').addEventListener('click', () => changeWeek(-1));
-    document.getElementById('nextWeekBtn').addEventListener('click', () => changeWeek(1));
-    document.getElementById('thisWeekBtn').addEventListener('click', goToThisWeek);
-
-    // 업무 추가
-    document.getElementById('addTaskBtn').addEventListener('click', () => {
-        const title = document.getElementById('newTaskInput').value;
-        addTask(title);
-    });
-
-    document.getElementById('newTaskInput').addEventListener('keypress', (e) => {
-        if (e.key === 'Enter') {
-            const title = document.getElementById('newTaskInput').value;
-            addTask(title);
-        }
-    });
-
-    // 요청사항 관련
-    document.getElementById('newRequestBtn').addEventListener('click', openNewRequestModal);
-    document.getElementById('sendRequestBtn').addEventListener('click', sendRequest);
-    document.getElementById('cancelRequestBtn').addEventListener('click', closeRequestModal);
-    document.getElementById('closeRequestModal').addEventListener('click', closeRequestModal);
-    document.getElementById('closeDetailModal').addEventListener('click', closeDetailModal);
-    
-    // 모달 외부 클릭 시 닫기
-    document.getElementById('requestModal').addEventListener('click', (e) => {
-        if (e.target.id === 'requestModal') closeRequestModal();
-    });
-    document.getElementById('requestDetailModal').addEventListener('click', (e) => {
-        if (e.target.id === 'requestDetailModal') closeDetailModal();
-    });
-
-    // 페이지 타이틀 초기 설정
-    updatePageTitle();
-    // 타이틀을 매일 자정에 업데이트
-    setInterval(updatePageTitle, 60000); // 1분마다 체크
-
-    // 자동 로그인 (저장된 세션이 있을 경우)
-    const savedUser = localStorage.getItem('currentUser');
-    if (savedUser) {
-        try {
-            currentUser = JSON.parse(savedUser);
-            document.getElementById('currentUserName').textContent = currentUser.username;
-            showScreen('mainScreen');
-            
-            // 주간 조회 초기화
-            currentWeekStart = getWeekStart(new Date());
-            updateWeekDisplay();
-            
-            // 로그인 버튼 텍스트 업데이트
-            updateLoginButton(true);
-            
-            loadAllData();
-            updateDateDisplay();
-            updatePageTitle();
-            checkAndMigrateTasks();
-            deleteOldCompletedTasks();
-        } catch (error) {
-            console.error('자동 로그인 오류:', error);
-            localStorage.removeItem('currentUser');
-            updateLoginButton(false);
-        }
-    }
-
-    // 주기적으로 데이터 갱신 (30초마다)
-    setInterval(() => {
-        if (currentUser) {
-            loadAllData();
-            checkAndMigrateTasks();
-        }
-    }, 30000);
-
-    // 하트비트 전송 (1분마다)
-    setInterval(() => {
-        if (currentUser) {
-            sendHeartbeat();
-        }
-    }, 60000); // 1분
-
-    // 매일 자정에 오래된 완료 업무 삭제 (1시간마다 체크)
-    setInterval(() => {
-        if (currentUser) {
-            deleteOldCompletedTasks();
-        }
-    }, 3600000); // 1시간
-    
-    // 페이지를 떠날 때 오프라인 상태로 변경
-    window.addEventListener('beforeunload', () => {
-        if (currentUser) {
-            // 동기식으로 오프라인 상태 전송 (비동기는 보장 안 됨)
-            navigator.sendBeacon(`tables/users/${currentUser.id}`, JSON.stringify({
-                is_online: false,
-                last_active_at: Date.now()
-            }));
-        }
-    });
-});
-
+        alert('요청이 전<span class="cursor">█</span>

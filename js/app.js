@@ -849,16 +849,37 @@ async function showRequestDetail(requestId) {
     }
     
     const actionsSection = document.getElementById('detailActions');
+    
+    // 받은 요청이고 대기중인 경우 -> 수락/거절 버튼
     if (request.to_user_id === currentUser.id && request.status === 'pending') {
         actionsSection.innerHTML = `
             <button class="btn btn-primary" onclick="respondToRequest('${request.id}', 'accepted')">수락</button>
             <button class="btn btn-secondary" onclick="respondToRequest('${request.id}', 'rejected')">거절</button>
         `;
-    } else {
+    }
+    // 보낸 요청인 경우 -> 항상 삭제 가능
+    else if (request.from_user_id === currentUser.id) {
+        actionsSection.innerHTML = `
+            <button class="btn btn-danger" onclick="deleteRequest('${request.id}')">
+                <i class="fas fa-trash"></i> 삭제
+            </button>
+        `;
+    }
+    // 받은 요청이고 이미 응답한 경우 -> 삭제 가능
+    else if (request.to_user_id === currentUser.id && request.status !== 'pending') {
+        actionsSection.innerHTML = `
+            <button class="btn btn-danger" onclick="deleteRequest('${request.id}')">
+                <i class="fas fa-trash"></i> 삭제
+            </button>
+        `;
+    }
+    // 그 외의 경우 (발생하지 않아야 함)
+    else {
         actionsSection.innerHTML = '';
     }
     
     document.getElementById('requestDetailModal').classList.add('active');
+
 }
 
 // 요청에 응답

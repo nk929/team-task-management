@@ -909,8 +909,41 @@ function closeDetailModal() {
     document.getElementById('requestDetailModal').classList.remove('active');
 }
 
+// 요청 삭제
+async function deleteRequest(requestId) {
+    if (!confirm('이 요청을 삭제하시겠습니까?')) {
+        return;
+    }
+    
+    showLoading();
+    try {
+        console.log('요청 삭제 시작:', requestId);
+        
+        await supabaseFetch(`requests?id=eq.${requestId}`, {
+            method: 'DELETE'
+        });
+        
+        // 로컬 배열에서 제거
+        allRequests = allRequests.filter(r => r.id !== requestId);
+        
+        // UI 업데이트
+        closeDetailModal();
+        renderRequests();
+        
+        console.log('요청 삭제 완료');
+        alert('요청이 삭제되었습니다.');
+        
+    } catch (error) {
+        console.error('요청 삭제 오류:', error);
+        alert('삭제 중 오류가 발생했습니다: ' + error.message);
+    } finally {
+        hideLoading();
+    }
+}
+
 // 이벤트 리스너 설정
 document.addEventListener('DOMContentLoaded', () => {
+
     console.log('페이지 로드 완료');
     console.log('이벤트 리스너 등록 중...');
     

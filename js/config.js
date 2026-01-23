@@ -2,7 +2,6 @@
 const SUPABASE_URL = 'https://pfatyrwaaproodukkwtp.supabase.co';
 const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBmYXR5cndhYXByb29kdWtrd3RwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njg5NzI4MDcsImV4cCI6MjA4NDU0ODgwN30.WNdMyiej0JOzKCIsPdiXlUJ1LgYGHolZOHhBwMIaE-Y';
 
-
 // API 헬퍼 함수
 async function supabaseFetch(endpoint, options = {}) {
     const url = `${SUPABASE_URL}/rest/v1/${endpoint}`;

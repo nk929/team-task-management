@@ -726,13 +726,28 @@ async function showRequestDetail(requestId) {
                 <i class="fas fa-trash"></i> 삭제
             </button>
         `;
-    } else if (request.from_user_id === currentUser.id) {
-        actionsSection.innerHTML = `
-            <button class="btn btn-danger" onclick="deleteRequest('${request.id}')">
-                <i class="fas fa-trash"></i> 삭제
-            </button>
-        `;
+      } else if (request.from_user_id === currentUser.id) {
+        // 보낸 요청
+        if (request.status === 'accepted' && !request.is_completed) {
+            // 수락되었지만 완료 안 됨 -> 완료 + 삭제 버튼
+            actionsSection.innerHTML = `
+                <button class="btn btn-success" onclick="completeRequest('${request.id}')">
+                    <i class="fas fa-check"></i> 완료
+                </button>
+                <button class="btn btn-danger" onclick="deleteRequest('${request.id}')">
+                    <i class="fas fa-trash"></i> 삭제
+                </button>
+            `;
+        } else {
+            // 대기중, 거절됨, 완료됨 -> 삭제만 가능
+            actionsSection.innerHTML = `
+                <button class="btn btn-danger" onclick="deleteRequest('${request.id}')">
+                    <i class="fas fa-trash"></i> 삭제
+                </button>
+            `;
+        }
     } else {
+
         actionsSection.innerHTML = '';
     }
     document.getElementById('requestDetailModal').classList.add('active');

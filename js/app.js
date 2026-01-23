@@ -91,36 +91,37 @@ async function login(username) {
 
     try {
         // 모든 사용자 조회 후 정확히 일치하는 사용자 찾기
-        const response = await fetch('tables/users?limit=1000');
-        const result = await response.json();
-        
+        const users = await supabaseFetch('users?select=*&limit=1000');
+
         let user;
-        const existingUser = (result.data || []).find(u => u.username === username.trim());
+        const existingUser = users.find(u => u.username === username.trim());
+
         
         if (existingUser) {
             // 기존 사용자 - 온라인 상태 업데이트
-            const updateResponse = await fetch(`tables/users/${existingUser.id}`, {
-                method: 'PATCH',
-                headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify({
-                    is_online: true,
-                    last_active_at: Date.now()
-                })
-            });
-            user = await updateResponse.json();
+        const now = new Date().toISOString();
+        const result = await supabaseFetch(`users?id=eq.${existingUser.id}`, {
+            method: 'PATCH',
+            body: JSON.stringify({
+                is_online: true,
+                last_active_at: now
+            })
+        });
+        user = result[0];
+
         } else {
             // 새 사용자 생성
-            const createResponse = await fetch('tables/users', {
+            const now = new Date().toISOString();
+            const result = await supabaseFetch('users', {
                 method: 'POST',
-                headers: {'Content-Type': 'application/json'},
                 body: JSON.stringify({
                     username: username.trim(),
                     is_online: true,
-                    last_active_at: Date.now(),
-                    created_at: Date.now()
-                })
-            });
-            user = await createResponse.json();
+                    last_active_at: now,
+                    created_at: now
+            })
+        });
+        user = result[0];
         }
 
         currentUser = user;
